@@ -25,4 +25,16 @@ check_shc:
 				exit 1; \
 		}
 
+build: compile
+		@echo "Build completed."
+
+verify:
+		@echo "Verifying sql_doctor..."
+		@if sql_doctor -v; then \
+			echo "OK"; \
+		else \
+			echo "NG"; \
+		fi
+		@echo "Verification completed."
+
 .PHONY: install uninstall compile check_shc

@@ -17,12 +17,12 @@ display_usage() {
     echo -e "  -v, --version"
     echo -e "      Display version information."
 
-    exit 1
+    exit 0
 }
 
 display_version() {
     echo -e "$0 $VERSION"
-    exit 1
+    exit 0
 }
 
 # Function to check if a file exists
@@ -30,7 +30,7 @@ check_file_exists() {
     local file_path=$1
     if [ ! -f "$file_path" ]; then
         printf "\e[1;31mError: File %s not found.\e[0m\n" "$file_path"
-        exit 1
+        exit 0
     fi
 }
 
@@ -74,7 +74,7 @@ check_total_results() {
 
         if [[ "$choice" != "y" && "$choice" != "Y" ]]; then
             printf "\e[1;35m• Script terminated by user.\e[0m\n"
-            exit 1
+            exit 0
         fi
     fi
 }
@@ -95,7 +95,7 @@ display_no_results() {
     if [[ "$total_results" -eq 0 ]]; then
         printf "\e[1;31m• No results found.\e[0m\n"
         display_time_difference "$start_time"
-        exit 1;
+        exit 0;
     fi
 }
 
@@ -142,7 +142,7 @@ process_options() {
             -*)
                 echo "Invalid option: $1" >&2
                 echo "See '$0 --help' for more information."
-                exit 1
+                exit 0
                 ;;
             *)
                 log_file_path=$1
@@ -155,7 +155,7 @@ process_options() {
     if [[ ! $log_file_path ]]; then
         printf "\e[1;31mError: Please provide the log file path.\e[0m\n"
         echo "See '$0 --help' for more information."
-        exit 1;
+        exit 0;
     fi
 }
 
