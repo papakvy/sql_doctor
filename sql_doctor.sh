@@ -183,7 +183,7 @@ process_log_data() {
     printf "• Results written to \e[1;34m$(pwd)/%s\e[0m\n" "$output_file_path"
     display_last_5_results "$output_file_path" "$total_results"
     display_time_difference "$start_time"
-    display_copyright
+    # display_copyright
 }
 
 # Process options
