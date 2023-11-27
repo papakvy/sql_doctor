@@ -9,7 +9,7 @@
 ### 1. Install
 
 ```bash
-make install
+[sudo] make install
 ```
 
 Then, follow the messages during installation!
@@ -25,5 +25,5 @@ sql_doctor -v
 ### 3. Uninstall
 
 ```bash
-make uninstall
+[sudo] make uninstall
 ```
