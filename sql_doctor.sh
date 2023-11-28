@@ -49,12 +49,12 @@ filter_log_data() {
     BEGIN { FS="\\(|\\)"; OFS="" }
     {
         if ($2 ~ /ms/) {
-            split($2, a, "ms");
+            split($2, a, "[^0-9]+");
             if (a[1] ~ /^[0-9]+(\.[0-9]+)?$/ && a[1] > time) {
-                print NR" -- ", a[1]" -- ", $0
+                print NR" -- ", $2" -- ", $0
             }
         }
-    }' "$log_file_path" | sort -n -k3,3 | awk -F' -- ' '{print "🦈 Line " $1 " -- " "\033[95m" $2 " (ms)" "\033[0m"" -- 👻", substr($0, index($0, $3)) "👻\n"}'
+    }' "$log_file_path" | sort -n -k3,3 | awk -F' -- ' '{print "🦈 Line " $1 " -- " "\033[95m" $2 "\033[0m"" -- 👻", substr($0, index($0, $3)) "👻\n"}'
 }
 
 # Function to count the total number of results
