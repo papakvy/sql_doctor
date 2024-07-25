@@ -7,14 +7,15 @@ COMPILED_SCRIPT_NAME = $(SCRIPT_NAME).x
 SHC_COMMAND = shc
 
 install: compile
-		@cp -v $(COMPILED_SCRIPT_NAME) $(INSTALL_DIR)/$(COMMAND_NAME)
+		@cp $(COMPILED_SCRIPT_NAME) $(INSTALL_DIR)/$(COMMAND_NAME)
 		@chmod +x $(INSTALL_DIR)/$(COMMAND_NAME)
-		@echo "Installation completed. You can now run 'sql_doctor -h' for more information."
+		@echo "'sql_doctor' was installed successfully."
+		@echo "Run 'sql_doctor -h' for more information."
 
 uninstall:
 		@rm -f $(INSTALL_DIR)/$(COMMAND_NAME)
 		@rm -f $(INSTALL_DIR)/$(COMPILED_SCRIPT_NAME)
-		@echo "Uninstallation complete. 'sql_doctor' removed."
+		@echo "'sql_doctor' has been removed successfully."
 
 compile: check_shc
 		@$(SHC_COMMAND) -f $(SCRIPT_NAME)
@@ -26,7 +27,7 @@ check_shc:
 		}
 
 build: compile
-		@echo "Build completed."
+		@echo "Build succeeded."
 
 verify:
 		@echo "Verifying sql_doctor..."

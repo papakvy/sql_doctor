@@ -5,13 +5,13 @@ VERSION="1.0.0 (2023-11-22)"
 # Function to display usage information
 display_usage() {
     echo -e "Usage: $0 [OPTIONS] <log_file_path>"
-    echo -e "Compress or uncompress log files with SQL detector."
+    echo -e "Find SQL queries based on execution time from both compressed and uncompressed log files."
 
     echo -e "\nOptions:"
     echo -e "  -e, --execution-time <value>"
-    echo -e "      Set the execution time threshold (default: 1000)."
+    echo -e "      The execution time threshold (default: 1000 miliseconds)."
     echo -e "  -p, --total-results-peak <value>"
-    echo -e "      Set the total results peak threshold (default: 200)."
+    echo -e "      The total results peak threshold (default: 200)."
     echo -e "  -h, --help"
     echo -e "      Display this help message."
     echo -e "  -v, --version"
@@ -44,6 +44,17 @@ clear_output_file() {
 filter_log_data() {
     local execution_time=$1
     local log_file_path=$2
+
+    # zcat -f -- $log_file_path | awk -v time="$execution_time" '
+    #   BEGIN { FS="\\(|\\)"; OFS="" }
+    #   {
+    #       if ($2 ~ /ms/) {
+    #           split($2, a, "[^0-9]+");
+    #           if (a[1] ~ /^[0-9]+(\.[0-9]+)?$/ && a[1] > time) {
+    #               print NR" -- ", $2" -- ", $0
+    #           }
+    #       }
+    #   }' | sort -n -k3,3 | awk -F' -- ' '{print "🦈 Line " $1 " -- " "\033[95m" $2 "\033[0m"" -- 👻", substr($0, index($0, $3)) "👻\n"}'
 
     awk -v time="$execution_time" '
     BEGIN { FS="\\(|\\)"; OFS="" }
