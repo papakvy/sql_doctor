@@ -27,11 +27,30 @@ display_version() {
 
 # Function to check if a file exists
 check_file_exists() {
-    local file_path=$1
-    if [ ! -f "$file_path" ]; then
-        printf "\e[1;31mError: File %s not found.\e[0m\n" "$file_path"
+    local log_file_path=$1
+    if [ ! -f "$log_file_path" ]; then
+    printf "\e[1;31mError: File %s not found.\e[0m\n" "$log_file_path"
         exit 0
     fi
+}
+
+# ensure_multiple_pattern_search() {
+#     local log_file_path=$1
+#     last_char="${log_file_path: -1}"
+#     echo $last_char
+#     [ "$last_char" = "*" ]
+# }
+
+ensure_multiple_pattern_search() {
+    local multiple_pattern=$1
+    case "$multiple_pattern" in
+        y|Y|yes|YES|Yes)
+            echo "true"
+            ;;
+        *)
+            echo "false"
+            ;;
+    esac
 }
 
 # Function to clear the content of a file
@@ -40,11 +59,34 @@ clear_output_file() {
     truncate -s 0 "$output_file"
 }
 
+results_temporary_file(){
+    local temporary_file_path=$1
+    rm -f "$temporary_file_path"
+    touch "$temporary_file_path"
+}
+
 # Function to filter log data based on execution time
+# filter_log_data_common() {
+#     local execution_time=$1
+#     local file_name=$2
+
+#     LC_ALL=C awk -v time="$execution_time" -v filename="$file_name" '
+#     BEGIN { FS="\\(|\\)"; OFS="" }
+#     {
+#         if ($2 ~ /ms/) {
+#             split($2, a, "[^0-9]+");
+#             if (a[1] ~ /^[0-9]+(\.[0-9]+)?$/ && a[1] > time) {
+#                 print filename, NR" -- ", $2" -- ", $0
+#             }
+#         }
+#     }' | LC_ALL=C sort -n -k4,4 | awk -F' -- ' '{print "🦈 File: " $1 " -- Line " $2 " -- " "\033[95m" $3 "\033[0m"" -- 👻", substr($0, index($0, $4)) "👻\n"}'
+# }
+
+
 filter_log_data() {
     local execution_time=$1
     local log_file_path=$2
-
+    local temporary_file_path=$3
     # zcat -f -- $log_file_path | awk -v time="$execution_time" '
     #   BEGIN { FS="\\(|\\)"; OFS="" }
     #   {
@@ -56,22 +98,24 @@ filter_log_data() {
     #       }
     #   }' | sort -n -k3,3 | awk -F' -- ' '{print "🦈 Line " $1 " -- " "\033[95m" $2 "\033[0m"" -- 👻", substr($0, index($0, $3)) "👻\n"}'
 
-    awk -v time="$execution_time" '
+    local log_file_name=$(basename "$log_file_path")
+
+    awk -v time="$execution_time" -v log_file_name="$log_file_name" '
     BEGIN { FS="\\(|\\)"; OFS="" }
     {
         if ($2 ~ /ms/) {
             split($2, a, "[^0-9]+");
             if (a[1] ~ /^[0-9]+(\.[0-9]+)?$/ && a[1] > time) {
-                print NR" -- ", $2" -- ", $0
+                print log_file_name, ":" NR " -- ", $2" -- ", $0
             }
         }
-    }' "$log_file_path" | sort -n -k3,3 | awk -F' -- ' '{print "🦈 Line " $1 " -- " "\033[95m" $2 "\033[0m"" -- 👻", substr($0, index($0, $3)) "👻\n"}'
+    }' "$log_file_path" | sort -n -k3,3 | awk -F' -- ' '{print "🦈 Line " $1 " -- " "\033[95m" $2 "\033[0m"" -- 👻", substr($0, index($0, $3)) " 👻\n"}' >> "$temporary_file_path"
 }
 
 # Function to count the total number of results
 count_total_results() {
-    local results=$1
-    echo "$results" | awk 'NF > 0 { count++ } END { print count }'
+    local temporary_file_path=$1
+    cat "$temporary_file_path" | awk 'NF > 0 { count++ } END { print count }'
 }
 
 # Function to check if the total results exceed the threshold
@@ -94,6 +138,7 @@ check_total_results() {
 write_results_to_file() {
     local results=$1
     local output_file=$2
+    mkdir -p 'output'
     echo "$results" >> "$output_file"
 }
 
@@ -114,7 +159,7 @@ display_no_results() {
 display_last_5_results() {
     local output_file=$1
     local total_results=$2
-    local last_5_results; last_5_results=$(tail -n7 "$output_file" | grep -v '^$')
+    local last_5_results; last_5_results=$(grep -v '^$' "$output_file" | tail -n5)
 
     printf "• Overview last 5/\e[1;34m%s\e[0m results longest SQL\n\n" "$total_results"
     printf "•••\n%s\n" "$last_5_results"
@@ -142,6 +187,10 @@ process_options() {
                 ;;
             -p|--total-results-peak)
                 total_results_peak="$2"
+                shift 2
+                ;;
+            -m|--multiple-pattern)
+                multiple_pattern="$2"
                 shift 2
                 ;;
             -h|--help)
@@ -173,21 +222,39 @@ process_options() {
 # Function to process log data
 process_log_data() {
     local start_time=$SECONDS
+    # echo "===== Processing log files: $log_file_path"
 
-    check_file_exists "$log_file_path"
-
-    local log_file_path=$log_file_path
     local execution_time=${execution_time:-1000}
     local total_results_peak=${total_results_peak:-200}
-    local output_file_path="output.txt"
+    local multiple_pattern=${multiple_pattern:-"n"}
+    echo "Multiple pattern: $multiple_pattern"
+    if [ $(ensure_multiple_pattern_search "$multiple_pattern") = "true" ]; then
+        echo "Multiple pattern"
+    else
+        echo "Single pattern"
+    fi
 
+    local temporary_file_path="output/temporary.txt"
+    results_temporary_file "$temporary_file_path"
+
+    local output_file_path="output/output_$execution_time.txt"
     clear_output_file "$output_file_path"
 
-    local results; results=$(filter_log_data "$execution_time" "$log_file_path")
-    local total_results; total_results=$(count_total_results "$results")
+    filter_log_data "$execution_time" "$log_file_path" "$temporary_file_path"
 
+    # local results; results=$(filter_log_data "$execution_time" "$log_file_path" "$temporary_file_path")
+    local total_results; total_results=$(count_total_results "$temporary_file_path")
+
+    # local total_results
+    # total_results=$(awk '{print $1}' <<< "$(<$temporary_file_path wc -l)")
+
+    echo "Total results: $total_results"
     check_total_results "$total_results" "$total_results_peak"
-    write_results_to_file "$results" "$output_file_path"
+    # exit 0
+
+    # write_results_to_file "$results" "$output_file_path"
+
+    cp "$temporary_file_path" "$output_file_path"
 
     display_no_results "$output_file_path" "$total_results" "$start_time" # Exit if no results are found
 
