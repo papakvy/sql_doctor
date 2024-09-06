@@ -19,12 +19,12 @@ Then, follow the messages during installation!
 ```bash
 sql_doctor -v
 
-# sql_doctor 1.0.0
+# sql_doctor 1.0.1 (2024-09-06)
 ```
 
 ### 3. Usage
 
-  - Default value: `--execution-time = 1000`, `--total-results-peak = 200` and `--multiple-pattern = y`
+  - Default value: `--execution-time = 1000`, `--total-results-peak = 200` and `--multiple-pattern = n`
 ```bash
 sql_doctor /path/to/log/file.log
 ```
