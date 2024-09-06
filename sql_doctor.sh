@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.0.1 (2024-09-06)"
+VERSION="1.0.2 (2024-09-07)"
 
 # Function to display usage information
 display_usage() {
@@ -37,7 +37,8 @@ check_file_exists() {
 }
 
 ensure_multiple_pattern_search() {
-    local input=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+    local input
+    input=$(echo "$1" | tr '[:upper:]' '[:lower:]')
     case "$input" in
         y|yes) echo "true" ;;
         *) echo "false" ;;
@@ -74,28 +75,35 @@ check_file_type() {
 
 filter_log_data() {
     local execution_time=$1 log_file_path=$2 temporary_file_path=$3
-    local log_file_name=$(basename "$log_file_path")
-    local file_type=$(check_file_type "$log_file_path")
+    local log_file_name file_type
 
-    local awk_script='
-    BEGIN { FS="\\(|\\)"; OFS="" }
+    log_file_name=$(basename "$log_file_path")
+    file_type=$(check_file_type "$log_file_path")
+
+    local awk_script="
+    BEGIN { FS=\"\\\\(|\\\\)\"; OFS=\"\" }
     {
-        if ($2 ~ /ms/) {
-            split($2, a, "[^0-9]+");
-            if (a[1] ~ /^[0-9]+(\.[0-9]+)?$/ && a[1] > time) {
-                print log_file_name, ":" NR " -- ", $2" -- ", $0
+        if (\$2 ~ /ms/) {
+            split(\$2, a, \"[^0-9]+\");
+            if (a[1] ~ /^[0-9]+(\\.[0-9]+)?$/ && a[1] > time) {
+                print log_file_name, \":\" NR \" -- \", \$2\" -- \", \$0
             }
         }
-    }'
+    }"
 
-    local sort_and_format="sort -n -k3,3 | awk -F' -- ' '{print \"🦈 Line \" \$1 \" -- \" \"\033[95m\" \$2 \"\033[0m\"\" -- 👻\", substr(\$0, index(\$0, \$3)) \" 👻\n\"}'"
+    local sort_and_format="
+    sort -n -k3,3 |
+    awk -F' -- ' '{print \"🦈 Line \" \$1 \" -- \" \"\033[95m\" \$2 \"\033[0m\" \" -- 👻\", substr(\$0, index(\$0,\$3)) \" 👻\"}'"
 
     case "$file_type" in
         "text")
-            awk -v time="$execution_time" -v log_file_name="$log_file_name" "$awk_script" "$log_file_path" | eval "$sort_and_format" >> "$temporary_file_path"
+            awk -v time="$execution_time" -v log_file_name="$log_file_name" "$awk_script" "$log_file_path" |
+            eval "$sort_and_format" >> "$temporary_file_path"
             ;;
         "gzip")
-            zcat -f -- "$log_file_path" | awk -v time="$execution_time" -v log_file_name="$log_file_name" "$awk_script" | eval "$sort_and_format" >> "$temporary_file_path"
+            zcat -f -- "$log_file_path" |
+            awk -v time="$execution_time" -v log_file_name="$log_file_name" "$awk_script" |
+            eval "$sort_and_format" >> "$temporary_file_path"
             ;;
         *)
             echo "Unknown file type: $file_type"
@@ -106,9 +114,9 @@ filter_log_data() {
 filter_log_data_files() {
     local execution_time=$1 log_file_path=$2 temporary_file_path=$3 multiple_pattern=$4
 
-    if [ $(ensure_multiple_pattern_search "$multiple_pattern") = "true" ]; then
-        for file in $log_file_path*; do
-            [[ -f $file ]] && filter_log_data "$execution_time" "$file" "$temporary_file_path"
+    if [ "$(ensure_multiple_pattern_search "$multiple_pattern")" = "true" ]; then
+        for file in "$log_file_path"*; do
+            [[ -f "$file" ]] && filter_log_data "$execution_time" "$file" "$temporary_file_path"
         done
     else
         filter_log_data "$execution_time" "$log_file_path" "$temporary_file_path"
@@ -118,7 +126,8 @@ filter_log_data_files() {
 # Function to count the total number of results
 count_total_results() {
     local temporary_file_path=$1
-    cat "$temporary_file_path" | awk 'NF > 0 { count++ } END { print count }'
+    # cat "$temporary_file_path" | awk 'NF > 0 { count++ } END { print count }'
+    awk 'NF > 0 { count++ } END { print count }' "$temporary_file_path"
 }
 
 # Function to check if the total results exceed the threshold
@@ -127,10 +136,11 @@ check_total_results() {
     local total_results_peak=$2
 
     if ((total_results > total_results_peak)); then
-        read -p $'\e[1;35m• Warning: There are more than \e[1;31m'"$total_results_peak"$'\e[1;35m results. Do you want to continue? (y/n): \e[0m' -r choice
-        choice=${choice:-"y"}  # Set default value to "y" if the user presses Enter
+        read -p $'\e[1;35mWarning: Found \e[1;31m'"$total_results"$'\e[1;35m results. This exceeds the peak threshold of \e[1;31m'"$total_results_peak"$'\e[1;35m results.\nDo you want to continue? (y/n): \e[0m' -r choice
 
-        if [[ "$choice" != "y" && "$choice" != "Y" ]]; then
+        choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]')
+
+        if [[ "$choice" != "y" && "$choice" != "yes" ]]; then
             printf "\e[1;35m• Script terminated by user.\e[0m\n"
             exit 0
         fi
@@ -139,14 +149,12 @@ check_total_results() {
 
 # Function to display a message when no results are found
 display_no_results() {
-    local output_file=$1
-    local total_results=$2
-    local start_time=$3
+    local total_results=$1 start_time=$2 end_time=$3
 
     if [[ "$total_results" -eq 0 ]]; then
         printf "\e[1;31m• No results found.\e[0m\n"
-        display_time_difference "$start_time"
-        exit 0;
+        display_time_difference "$start_time" "$end_time"
+        exit 0
     fi
 }
 
@@ -162,7 +170,8 @@ display_last_3_results() {
 
 # Function to display the time difference
 display_time_difference() {
-    local end_time=$SECONDS
+    local start_time=$1
+    local end_time=$2
     local time_diff=$((end_time - start_time))
     printf "\n\e[1;34mFinished in %s seconds.\e[0m\n" "$time_diff"
 }
@@ -210,22 +219,23 @@ process_log_data() {
 
     filter_log_data_files "$execution_time" "$log_file_path" "$temporary_file_path" "$multiple_pattern"
 
-    local total_results=$(count_total_results "$temporary_file_path")
+    local end_time=$SECONDS
+    local total_results
+    total_results=$(count_total_results "$temporary_file_path")
+
     check_total_results "$total_results" "$total_results_peak"
+    display_no_results "$total_results" "$start_time" "$end_time"
 
-    cp "$temporary_file_path" "$output_file_path"
-    display_no_results "$output_file_path" "$total_results" "$start_time"
-
-    printf "• Results written to \e[1;34m$(pwd)/%s\e[0m\n" "$output_file_path"
+    mv "$temporary_file_path" "$output_file_path"
+    printf "• Results written to \e[1;34m%s\e[0m\n" "$(pwd)/$output_file_path"
     display_last_3_results "$output_file_path" "$total_results"
 
-    clear_results_temporary_file "$temporary_file_path"
-    display_time_difference "$start_time"
-    # display_copyright
+    display_time_difference "$start_time" "$end_time"
 }
 
-# Process options
-process_options "$@"
+main() {
+    process_options "$@"
+    process_log_data "$@"
+}
 
-# Call the function to process log data
-process_log_data "$@"
+main "$@"
