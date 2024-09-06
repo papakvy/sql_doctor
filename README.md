@@ -24,7 +24,7 @@ sql_doctor -v
 
 ### 3. Usage
 
-  - Default value: `--execution-time = 1000` and `--total-results-peak = 200`
+  - Default value: `--execution-time = 1000`, `--total-results-peak = 200` and `--multiple-pattern = y`
 ```bash
 sql_doctor /path/to/log/file.log
 ```
