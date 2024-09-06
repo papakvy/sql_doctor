@@ -67,7 +67,7 @@ check_file_type() {
 
     case "$(file -b --mime-type "$file_path")" in
         text/plain) echo "text" ;;
-        application/gzip) echo "gzip" ;;
+        application/gzip|application/x-gzip) echo "gzip" ;;
         *) echo "unknown" ;;
     esac
 }
