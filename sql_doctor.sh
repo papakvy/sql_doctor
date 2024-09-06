@@ -92,7 +92,6 @@ filter_log_data() {
     }"
 
     local sort_and_format="
-    sort -n -k3,3 |
     awk -F' -- ' '{print \"🦈 Line \" \$1 \" -- \" \"\033[95m\" \$2 \"\033[0m\" \" -- 👻\", substr(\$0, index(\$0,\$3)) \" 👻\"}'"
 
     case "$file_type" in
@@ -121,6 +120,11 @@ filter_log_data_files() {
     else
         filter_log_data "$execution_time" "$log_file_path" "$temporary_file_path"
     fi
+
+    awk '{split($5, a, "ms"); print a[1], $0}' "$temporary_file_path" | sort -n -k1,1 | cut -d' ' -f2- >> "$temporary_file_path".sorted
+    mv "$temporary_file_path".sorted "$temporary_file_path"
+
+
 }
 
 # Function to count the total number of results
