@@ -121,7 +121,14 @@ filter_log_data_files() {
         filter_log_data "$execution_time" "$log_file_path" "$temporary_file_path"
     fi
 
-    awk '{split($3, a, "ms"); print a[1], $0}' "$temporary_file_path" | sort -n -k1,1 | cut -d' ' -f2- | awk '{print "\033[1;95m⏰ 【" $3 "】\033[0m" "\t " "📁 " $1 "\t🦈", substr($0, index($0,$5)) " 🦈"}' >> "$temporary_file_path".sorted
+    awk '{split($3, a, "ms"); print a[1], $0}' "$temporary_file_path" | \
+      sort -n -k1,1 | \
+      cut -d' ' -f2- | \
+      awk '{printf "\033[1;95m⏰ 【%s (~%.2fmin)】\033[0m\t📁 %s\t🦈 %s 🦈\n", $3 , $3/60000, $1, substr($0, index($0,$4))}' \
+      >> "$temporary_file_path".sorted
+
+
+    # awk '{split($3, a, "ms"); print a[1], $0}' "$temporary_file_path" | sort -n -k1,1 | cut -d' ' -f2- | awk '{print "\033[1;95m⏰ 【" $3 "】\033[0m" "\t " "📁 " $1 "\t🦈", substr($0, index($0,$5)) " 🦈"}' >> "$temporary_file_path".sorted
 
     # BUG report!
     # awk '{split($3, a, "ms"); print a[1], $0}' "$temporary_file_path" | sort -n -k1,1 | cut -d' ' -f2- >> "$temporary_file_path".sorted
