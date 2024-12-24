@@ -19,7 +19,7 @@ Then, follow the messages during installation!
 ```bash
 sql_doctor -v
 
-# sql_doctor 1.0.1 (2024-09-06)
+# sql_doctor 1.0.3 (2024-12-24 🎄)
 ```
 
 ### 3. Usage
