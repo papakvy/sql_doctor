@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.0.2 (2024-09-07)"
+VERSION="1.0.3 (2024-12-24 🎄)"
 
 # Function to display usage information
 display_usage() {
@@ -92,7 +92,7 @@ filter_log_data() {
     }"
 
     local sort_and_format="
-    awk -F' -- ' '{print \"🦈 Line \" \$1 \" -- \" \"\033[95m\" \$2 \"\033[0m\" \" -- 👻\", substr(\$0, index(\$0,\$3)) \" 👻\"}'"
+    awk -F' -- ' '{print \$1 \" -- \" \$2, substr(\$0, index(\$0, \$3))}'"
 
     case "$file_type" in
         "text")
@@ -121,7 +121,11 @@ filter_log_data_files() {
         filter_log_data "$execution_time" "$log_file_path" "$temporary_file_path"
     fi
 
-    awk '{split($5, a, "ms"); print a[1], $0}' "$temporary_file_path" | sort -n -k1,1 | cut -d' ' -f2- >> "$temporary_file_path".sorted
+    awk '{split($3, a, "ms"); print a[1], $0}' "$temporary_file_path" | sort -n -k1,1 | cut -d' ' -f2- | awk '{print "\033[1;95m⏰ 【" $3 "】\033[0m" "\t " "📁 " $1 "\t🦈", substr($0, index($0,$5)) " 🦈"}' >> "$temporary_file_path".sorted
+
+    # BUG report!
+    # awk '{split($3, a, "ms"); print a[1], $0}' "$temporary_file_path" | sort -n -k1,1 | cut -d' ' -f2- >> "$temporary_file_path".sorted
+    # Bug when using awk to sort the file, the output is not sorted correctly due to `execution_time` including a ANSI color code
     mv "$temporary_file_path".sorted "$temporary_file_path"
 
 
