@@ -10,4 +10,4 @@ jobs:
     - name: PR Agent action step
       uses: Codium-ai/pr-agent@main
       env:
-        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        GITHUB_TOKEN: ${{ vars.TOKEN }}
