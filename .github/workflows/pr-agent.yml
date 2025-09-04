@@ -17,7 +17,7 @@ jobs:
         uses: qodo-ai/pr-agent@main
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
-          OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+          #OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
