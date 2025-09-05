@@ -12,8 +12,8 @@ jobs:
       contents: write
     name: Run pr agent on every pull request, respond to user comments
     steps:
-      - name: Debug Secrets (Use with Caution!)
-        run: |
+      # - name: Debug Secrets (Use with Caution!)
+      #   run: |
           # echo "OPENAI_KEY:"
           # echo ${{ secrets.OPENAI_KEY }} | sed 's/./& /g'
           # echo "OPENAI_API_BASE:"
@@ -27,6 +27,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
           OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
-          # github_action_config.auto_review: "true"
-          # github_action_config.auto_describe: "true"
-          # github_action_config.auto_improve: "true"
+          github_action_config.auto_review: "true"
+          github_action_config.auto_describe: "true"
+          github_action_config.auto_improve: "true"
