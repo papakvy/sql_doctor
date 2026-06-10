@@ -31,7 +31,7 @@ curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh 
 Install a specific release:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --version v1.0.4
+curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --version v1.0.5
 ```
 
 Install to `/usr/local/bin`. The installer uses `sudo` only when the target directory is not writable:
@@ -63,12 +63,12 @@ export PATH="$HOME/.local/bin:$PATH"
 ```bash
 sql_doctor -v
 
-# sql_doctor 1.0.4 (2026-06-10)
+# sql_doctor 1.0.5 (2026-06-10)
 ```
 
 ### 3. Usage
 
-  - Default value: `--execution-time = 1000`, `--top = 15`, `--total-results-peak = 200` and `--multiple-pattern = n`
+  - Default value: `--execution-time = 1000`, `--top = 15` and `--multiple-pattern = n`
 
 Use the installed command:
 
@@ -88,13 +88,11 @@ The previous Bash implementation is kept as `sql_doctor.bash` for comparison and
 ./sql_doctor.bash /path/to/log/file.log
 ```
 
-- Choose your desired values for `--execution-time` and `--total-results-peak`.
 ```bash
-sql_doctor -e 5000 -p 100 /path/to/log/file.log
+sql_doctor -e 5000 /path/to/log/file.log
 
 # Explain
   - Get all SQLs in the `/path/to/log/file.log` with  `--execution-time >= 5000 miliseconds`
-  - Results must be "<=100" records
 ```
 
 - Keep only the top N slowest SQLs before sorting the final output. The default is `--top 15`.

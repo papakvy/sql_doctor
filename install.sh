@@ -17,7 +17,7 @@ usage() {
 Usage: install.sh [OPTIONS]
 
 Options:
-  --version <tag>   Install a release tag such as v1.0.4 (default: latest)
+  --version <tag>   Install a release tag such as v1.0.5 (default: latest)
   --prefix <path>   Install under <path>/bin (default: $DEFAULT_PREFIX)
   --bindir <path>   Install directly into <path>
   --system          Install into /usr/local/bin

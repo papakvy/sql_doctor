@@ -5,16 +5,14 @@ use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
 
-const VERSION: &str = "1.0.4 (2026-06-10)";
+const VERSION: &str = "1.0.5 (2026-06-10)";
 const DEFAULT_EXECUTION_TIME: f64 = 1000.0;
-const DEFAULT_TOTAL_RESULTS_PEAK: usize = 200;
 const DEFAULT_TOP_RESULTS: usize = 15;
 
 #[derive(Clone, Debug)]
 struct Config {
     execution_time: f64,
     execution_time_label: String,
-    total_results_peak: usize,
     multiple_pattern: bool,
     top_results: Option<usize>,
     log_file_path: PathBuf,
@@ -66,12 +64,6 @@ fn run() -> Result<(), String> {
     let mut final_records = if config.top_results.is_some() {
         top_records
     } else {
-        if total_matches > config.total_results_peak
-            && !confirm_large_result(total_matches, config.total_results_peak)?
-        {
-            println!("\x1b[1;35m• Script terminated by user.\x1b[0m");
-            return Ok(());
-        }
         records
     };
 
@@ -95,7 +87,6 @@ fn run() -> Result<(), String> {
 fn parse_args(args: Vec<String>) -> Result<Config, String> {
     let mut execution_time = DEFAULT_EXECUTION_TIME;
     let mut execution_time_label = trim_number_label(DEFAULT_EXECUTION_TIME.to_string());
-    let mut total_results_peak = DEFAULT_TOTAL_RESULTS_PEAK;
     let mut multiple_pattern = false;
     let mut top_results = Some(DEFAULT_TOP_RESULTS);
     let mut log_file_path = None;
@@ -107,11 +98,6 @@ fn parse_args(args: Vec<String>) -> Result<Config, String> {
                 let value = option_value(&args, i)?;
                 execution_time = parse_positive_number(value, "--execution-time")?;
                 execution_time_label = value.to_string();
-                i += 2;
-            }
-            "-p" | "--total-results-peak" => {
-                let value = option_value(&args, i)?;
-                total_results_peak = parse_positive_integer(value, "--total-results-peak")?;
                 i += 2;
             }
             "-m" | "--multiple-pattern" => {
@@ -159,7 +145,6 @@ fn parse_args(args: Vec<String>) -> Result<Config, String> {
     Ok(Config {
         execution_time,
         execution_time_label,
-        total_results_peak,
         multiple_pattern,
         top_results,
         log_file_path,
@@ -211,8 +196,6 @@ fn display_usage(program: &str) {
     println!("\nOptions:");
     println!("  -e, --execution-time <value>");
     println!("      The execution time threshold (default: 1000 miliseconds).");
-    println!("  -p, --total-results-peak <value>");
-    println!("      The total results peak threshold (default: 200).");
     println!("  -m, --multiple-pattern <value>");
     println!("      The multiple pattern search (default: n).");
     println!("  -t, --top <value>");
@@ -381,22 +364,6 @@ fn compare_records(left: &MatchRecord, right: &MatchRecord) -> Ordering {
         .partial_cmp(&right.duration_ms)
         .unwrap_or(Ordering::Equal)
         .then_with(|| left.location.cmp(&right.location))
-}
-
-fn confirm_large_result(total_results: usize, total_results_peak: usize) -> Result<bool, String> {
-    print!(
-        "\x1b[1;35mWarning: Found \x1b[1;31m{total_results}\x1b[1;35m results. This exceeds the peak threshold of \x1b[1;31m{total_results_peak}\x1b[1;35m results.\nDo you want to continue? (y/n): \x1b[0m"
-    );
-    io::stdout()
-        .flush()
-        .map_err(|error| format!("cannot flush stdout: {error}"))?;
-
-    let mut choice = String::new();
-    io::stdin()
-        .read_line(&mut choice)
-        .map_err(|error| format!("cannot read response: {error}"))?;
-    let choice = choice.trim().to_ascii_lowercase();
-    Ok(choice == "y" || choice == "yes")
 }
 
 fn write_output(output_file_path: &Path, records: &[MatchRecord]) -> io::Result<()> {

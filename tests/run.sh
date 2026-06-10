@@ -49,7 +49,7 @@ done
 
 (
     cd "$TEST_DIR"
-    "$SQL_DOCTOR_BIN" -e 1000 -p 10 sql.log > stdout.txt
+    "$SQL_DOCTOR_BIN" -e 1000 sql.log > stdout.txt
 )
 
 OUTPUT_FILE="$TEST_DIR/output/output_1000.txt"
@@ -64,7 +64,7 @@ assert_contains "$TEST_DIR/stdout.txt" "Results written to"
 
 (
     cd "$TEST_DIR"
-    "$SQL_DOCTOR_BIN" -e 1 -p 1 sql_many.log > default-top.out
+    "$SQL_DOCTOR_BIN" -e 1 sql_many.log > default-top.out
 )
 DEFAULT_TOP_OUTPUT_FILE="$TEST_DIR/output/output_1.txt"
 if [[ "$(grep -cve '^$' "$DEFAULT_TOP_OUTPUT_FILE")" -ne 15 ]]; then
@@ -77,7 +77,7 @@ assert_contains "$DEFAULT_TOP_OUTPUT_FILE" "3020.0ms"
 
 (
     cd "$TEST_DIR"
-    "$SQL_DOCTOR_BIN" -e 1 -p 100 --all sql_many.log > all.out
+    "$SQL_DOCTOR_BIN" -e 1 --all sql_many.log > all.out
 )
 ALL_OUTPUT_FILE="$TEST_DIR/output/output_1.txt"
 if [[ "$(grep -cve '^$' "$ALL_OUTPUT_FILE")" -ne 20 ]]; then
@@ -88,7 +88,7 @@ fi
 
 (
     cd "$TEST_DIR"
-    "$SQL_DOCTOR_BIN" -e 0.1 -p 1 --top 2 sql.log > top.out
+    "$SQL_DOCTOR_BIN" -e 0.1 --top 2 sql.log > top.out
 )
 TOP_OUTPUT_FILE="$TEST_DIR/output/output_0.1.txt"
 assert_contains "$TOP_OUTPUT_FILE" "1500.5ms"
@@ -142,7 +142,7 @@ if command -v gzip > /dev/null 2>&1; then
     gzip -c "$TEST_DIR/sql.log" > "$TEST_DIR/sql.log.1.gz"
     (
         cd "$TEST_DIR"
-        "$SQL_DOCTOR_BIN" -e 2000 -p 10 sql.log.1.gz > gzip.out
+        "$SQL_DOCTOR_BIN" -e 2000 sql.log.1.gz > gzip.out
     )
     assert_contains "$TEST_DIR/output/output_2000.txt" "2500.0ms"
     assert_not_contains "$TEST_DIR/output/output_2000.txt" "1500.5ms"
@@ -168,6 +168,6 @@ fi
 SQL_DOCTOR_TARGET="$TEST_TARGET" SQL_DOCTOR_ARTIFACT_URL="file://$TEST_DIR/$TEST_ARCHIVE" "$ROOT_DIR/install.sh" --prefix "$INSTALL_DIR" > "$TEST_DIR/install.out"
 "$INSTALL_DIR/bin/sql_doctor" -v > "$TEST_DIR/installed-version.out"
 assert_contains "$TEST_DIR/install.out" "sql_doctor installed"
-assert_contains "$TEST_DIR/installed-version.out" "1.0.4"
+assert_contains "$TEST_DIR/installed-version.out" "1.0.5"
 
 echo "All tests passed."
