@@ -16,6 +16,12 @@ make test
 
 ### 1. Install
 
+System install to `/usr/local/bin`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --system
+```
+
 Latest release to `$HOME/.local/bin`:
 
 ```bash
@@ -34,12 +40,6 @@ Temporary build from the current `main` branch:
 curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --from-git main
 ```
 
-System install to `/usr/local/bin`:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --system
-```
-
 Build and install from source:
 
 ```bash
@@ -52,7 +52,7 @@ Custom prefix:
 make install PREFIX="$HOME/.local"
 ```
 
-Make sure the target `bin` directory is on your `PATH`:
+If you install to a custom prefix, make sure the target `bin` directory is on your `PATH`:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"

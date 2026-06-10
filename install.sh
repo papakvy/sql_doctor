@@ -178,7 +178,14 @@ can_sudo() {
 
 install_file() {
     local source=$1
-    if install -d "$BINDIR" && install -m 0755 "$source" "$TARGET" 2>/dev/null; then
+
+    if [[ "$BINDIR" = /usr/local/* ]] && can_sudo; then
+        sudo install -d "$BINDIR"
+        sudo install -m 0755 "$source" "$TARGET"
+        return
+    fi
+
+    if install -d "$BINDIR" >/dev/null 2>&1 && install -m 0755 "$source" "$TARGET" >/dev/null 2>&1; then
         return
     fi
 
@@ -189,7 +196,7 @@ install_file() {
     fi
 
     echo "Error: cannot write to $BINDIR and sudo is unavailable or disabled." >&2
-    echo "Try: install.sh --prefix \"\$HOME/.local\"" >&2
+    echo "Try: install.sh --prefix \"$HOME/.local\"" >&2
     exit 1
 }
 
