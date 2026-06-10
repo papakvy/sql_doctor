@@ -160,10 +160,11 @@ cp "$ROOT_DIR/target/release/sql_doctor" "$ARTIFACT_DIR/sql_doctor"
 TEST_TARGET="test-target"
 TEST_ARCHIVE="sql_doctor-$TEST_TARGET.tar.gz"
 tar -C "$ARTIFACT_DIR" -czf "$TEST_DIR/$TEST_ARCHIVE" sql_doctor
+TEST_CHECKSUM_FILE="${TEST_ARCHIVE%.tar.gz}.sha256"
 if command -v sha256sum >/dev/null 2>&1; then
-    (cd "$TEST_DIR" && sha256sum "$TEST_ARCHIVE" > "$TEST_ARCHIVE.sha256")
+    (cd "$TEST_DIR" && sha256sum "$TEST_ARCHIVE" > "$TEST_CHECKSUM_FILE")
 else
-    (cd "$TEST_DIR" && shasum -a 256 "$TEST_ARCHIVE" > "$TEST_ARCHIVE.sha256")
+    (cd "$TEST_DIR" && shasum -a 256 "$TEST_ARCHIVE" > "$TEST_CHECKSUM_FILE")
 fi
 SQL_DOCTOR_TARGET="$TEST_TARGET" SQL_DOCTOR_ARTIFACT_URL="file://$TEST_DIR/$TEST_ARCHIVE" "$ROOT_DIR/install.sh" --prefix "$INSTALL_DIR" > "$TEST_DIR/install.out"
 "$INSTALL_DIR/bin/sql_doctor" -v > "$TEST_DIR/installed-version.out"
