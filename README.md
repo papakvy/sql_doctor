@@ -16,16 +16,16 @@ make test
 
 ### 1. Install
 
-Quick install from the latest GitHub Release to `$HOME/.local/bin`:
+Temporary install by building the current `main` branch:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --from-git main
+```
+
+Install from the latest GitHub Release to `$HOME/.local/bin`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash
-```
-
-Install to `/usr/local/bin`. The installer uses `sudo` only when the target directory is not writable:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --system
 ```
 
 Install a specific release:
@@ -34,10 +34,10 @@ Install a specific release:
 curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --version v1.0.4
 ```
 
-Before the first Rust release is published, test the `port-rust` branch by building from git:
+Install to `/usr/local/bin`. The installer uses `sudo` only when the target directory is not writable:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/port-rust/install.sh | bash -s -- --from-git port-rust
+curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --system
 ```
 
 Build and install from source:
@@ -80,6 +80,12 @@ Or run the development binary from the repository:
 
 ```bash
 cargo run -- /path/to/log/file.log
+```
+
+The previous Bash implementation is kept as `sql_doctor.bash` for comparison and benchmarking:
+
+```bash
+./sql_doctor.bash /path/to/log/file.log
 ```
 
 - Choose your desired values for `--execution-time` and `--total-results-peak`.
