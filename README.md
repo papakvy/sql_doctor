@@ -3,7 +3,8 @@
 ## Requirements
 
 - Bash
-- `make`
+- `curl` or `wget` for quick install
+- `make` for local development
 
 ## Local Testing
 
@@ -14,6 +15,26 @@ make test
 ## Installation Instructions
 
 ### 1. Install
+
+Quick install to `$HOME/.local/bin`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash
+```
+
+Install to `/usr/local/bin`. The installer uses `sudo` only when the target directory is not writable:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --system
+```
+
+Install to a custom prefix:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --prefix "$HOME/.local"
+```
+
+If you already cloned the repository, install with `make`:
 
 ```bash
 [sudo] make install

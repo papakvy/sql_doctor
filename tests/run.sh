@@ -94,4 +94,12 @@ if command -v gzip > /dev/null 2>&1; then
     assert_not_contains "$TEST_DIR/output/output_2000.txt" "1500.5ms"
 fi
 
+bash -n "$ROOT_DIR/install.sh"
+
+INSTALL_DIR="$TEST_DIR/install-prefix"
+SQL_DOCTOR_URL="file://$ROOT_DIR/sql_doctor" "$ROOT_DIR/install.sh" --prefix "$INSTALL_DIR" > "$TEST_DIR/install.out"
+"$INSTALL_DIR/bin/sql_doctor" -v > "$TEST_DIR/installed-version.out"
+assert_contains "$TEST_DIR/install.out" "sql_doctor installed"
+assert_contains "$TEST_DIR/installed-version.out" "1.0.3"
+
 echo "All tests passed."
