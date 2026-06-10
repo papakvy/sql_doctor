@@ -50,15 +50,64 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch tags
+        run: git fetch --tags --force
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
-      - name: Build checksums file
+      - name: Build release notes
         run: |
-          cat artifacts/*.sha256 > artifacts/checksums.txt
+          {
+            echo "# sql_doctor ${GITHUB_REF_NAME}"
+            echo
+            echo "Changelog since v1.0.3"
+            echo
+            git log --no-merges --pretty=format:'- %s (%h)' v1.0.3..HEAD
+          } > release-notes.md
       - uses: softprops/action-gh-release@v2
         with:
+          body_path: release-notes.md
           files: |
             artifacts/*.tar.gz
-            artifacts/checksums.txt
+            artifacts/*.sha256
+      - name: Cleanup older releases and tags
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const currentTag = context.ref.startsWith('refs/tags/') ? context.ref.replace('refs/tags/', '') : null;
+            if (!currentTag) {
+              core.info('Not running from a tag ref; skipping cleanup.');
+              return;
+            }
+
+            const keep = new Set(['v1.0.3', currentTag]);
+            const { owner, repo } = context.repo;
+
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              owner,
+              repo,
+              per_page: 100,
+            });
+            for (const release of releases) {
+              if (!keep.has(release.tag_name)) {
+                core.info(`Deleting release ${release.tag_name}`);
+                await github.rest.repos.deleteRelease({ owner, repo, release_id: release.id });
+              }
+            }
+
+            const refs = await github.paginate(github.rest.git.listMatchingRefs, {
+              owner,
+              repo,
+              ref: 'tags/',
+            });
+            for (const ref of refs) {
+              const tag = ref.ref.replace('refs/tags/', '');
+              if (!keep.has(tag)) {
+                core.info(`Deleting tag ${tag}`);
+                await github.rest.git.deleteRef({ owner, repo, ref: `tags/${tag}` });
+              }
+            }
