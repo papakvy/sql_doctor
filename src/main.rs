@@ -9,7 +9,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-const VERSION: &str = "2.0.3 (2026-06-10)";
+const VERSION: &str = "2.0.4 (2026-06-10)";
 const DEFAULT_EXECUTION_TIME: f64 = 1000.0;
 const DEFAULT_TOP_RESULTS: usize = 15;
 
@@ -457,7 +457,7 @@ fn print_update_available(rx: mpsc::Receiver<String>) {
         if is_newer_version(current_ver, &remote_version) {
             println!("\n\x1b[1;33m✨ New version available: \x1b[1;32mv{}\x1b[0m \x1b[90m(current: v{})\x1b[0m", remote_version, current_ver);
             println!("\x1b[1;33m🚀 Run this command to update:\x1b[0m");
-            println!("   \x1b[1;36mcurl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash\x1b[0m\n");
+            println!("   \x1b[1;36mcurl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --system\x1b[0m\n");
         }
     }
 }
