@@ -14,6 +14,10 @@ display_usage() {
     echo -e "      The total results peak threshold (default: 200)."
     echo -e "  -m, --multiple-pattern <value>"
     echo -e "      The multiple pattern search (default: n)."
+    echo -e "  -t, --top <value>"
+    echo -e "      Keep only the top N slowest queries before sorting (default: 15)."
+    echo -e "  --all"
+    echo -e "      Include all matching queries instead of limiting to top results."
     echo -e "  -h, --help"
     echo -e "      Display this help message."
     echo -e "  -v, --version"
@@ -47,6 +51,14 @@ validate_positive_number() {
 
     printf "\e[1;31mError: %s must be greater than 0.\e[0m\n" "$option_name" >&2
     exit 1
+}
+
+validate_positive_integer() {
+    local value=$1 option_name=$2
+    if [[ ! "$value" =~ ^[0-9]+$ || "$value" -eq 0 ]]; then
+        printf "\e[1;31mError: %s must be a positive integer.\e[0m\n" "$option_name" >&2
+        exit 1
+    fi
 }
 
 require_option_value() {
@@ -147,6 +159,45 @@ sort_log_data() {
     mv "$temporary_file_path".sorted "$temporary_file_path"
 }
 
+keep_top_log_data() {
+    local temporary_file_path=$1 top_results=$2
+    awk -F'\t' -v limit="$top_results" '
+        function refresh_min(    i) {
+            min_index = 1
+            min_time = times[1]
+            for (i = 2; i <= count; i++) {
+                if (times[i] < min_time) {
+                    min_time = times[i]
+                    min_index = i
+                }
+            }
+        }
+
+        NF > 0 {
+            current_time = $1 + 0
+            if (count < limit) {
+                count++
+                times[count] = current_time
+                rows[count] = $0
+                if (count == limit) {
+                    refresh_min()
+                }
+            } else if (current_time > min_time) {
+                times[min_index] = current_time
+                rows[min_index] = $0
+                refresh_min()
+            }
+        }
+
+        END {
+            for (i = 1; i <= count; i++) {
+                print rows[i]
+            }
+        }
+    ' "$temporary_file_path" > "$temporary_file_path".top
+    mv "$temporary_file_path".top "$temporary_file_path"
+}
+
 # Function to count the total number of results
 count_total_results() {
     local temporary_file_path=$1
@@ -212,6 +263,8 @@ process_options() {
             -e|--execution-time) require_option_value "$1" "${2:-}"; execution_time="$2"; shift 2 ;;
             -p|--total-results-peak) require_option_value "$1" "${2:-}"; total_results_peak="$2"; shift 2 ;;
             -m|--multiple-pattern) require_option_value "$1" "${2:-}"; multiple_pattern="$2"; shift 2 ;;
+            -t|--top) require_option_value "$1" "${2:-}"; top_results="$2"; shift 2 ;;
+            --all) all_results="true"; shift 1 ;;
             -h|--help) display_usage ;;
             -v|--version) display_version ;;
             -*) echo "Invalid option: $1" >&2; echo "See '$0 --help' for more information." >&2; exit 1 ;;
@@ -229,9 +282,18 @@ process_options() {
     execution_time=${execution_time:-1000}
     total_results_peak=${total_results_peak:-200}
     multiple_pattern=${multiple_pattern:-"n"}
+    all_results=${all_results:-"false"}
+    if [[ "$all_results" = "true" ]]; then
+        top_results=""
+    else
+        top_results=${top_results:-15}
+    fi
 
     validate_positive_number "$execution_time" "--execution-time"
     validate_positive_number "$total_results_peak" "--total-results-peak"
+    if [[ -n "$top_results" ]]; then
+        validate_positive_integer "$top_results" "--top"
+    fi
 }
 
 # Function to process log data
@@ -240,11 +302,12 @@ process_log_data() {
     local execution_time=$execution_time
     local total_results_peak=$total_results_peak
     local multiple_pattern=$multiple_pattern
+    local top_results=$top_results
 
     mkdir -p 'output'
     local temporary_file_path
     temporary_file_path=$(mktemp "output/temporary.XXXXXX")
-    trap 'rm -f "$temporary_file_path" "$temporary_file_path.sorted"' EXIT
+    trap 'rm -f "$temporary_file_path" "$temporary_file_path.sorted" "$temporary_file_path.top"' EXIT
 
     local output_file_path="output/output_$execution_time.txt"
     clear_output_file "$output_file_path"
@@ -255,8 +318,14 @@ process_log_data() {
     total_results=$(count_total_results "$temporary_file_path")
     local end_time=$SECONDS
 
-    check_total_results "$total_results" "$total_results_peak"
     display_no_results "$total_results" "$start_time" "$end_time"
+
+    if [[ -n "$top_results" ]]; then
+        keep_top_log_data "$temporary_file_path" "$top_results"
+        total_results=$(count_total_results "$temporary_file_path")
+    else
+        check_total_results "$total_results" "$total_results_peak"
+    fi
 
     sort_log_data "$temporary_file_path"
     end_time=$SECONDS

@@ -62,7 +62,7 @@ sql_doctor -v
 
 ### 3. Usage
 
-  - Default value: `--execution-time = 1000`, `--total-results-peak = 200` and `--multiple-pattern = n`
+  - Default value: `--execution-time = 1000`, `--top = 15`, `--total-results-peak = 200` and `--multiple-pattern = n`
 
 Use the installed command:
 
@@ -83,6 +83,16 @@ sql_doctor -e 5000 -p 100 /path/to/log/file.log
 # Explain
   - Get all SQLs in the `/path/to/log/file.log` with  `--execution-time >= 5000 miliseconds`
   - Results must be "<=100" records
+```
+
+- Keep only the top N slowest SQLs before sorting the final output. The default is `--top 15`.
+```bash
+sql_doctor -e 1000 --top 100 /path/to/log/file.log
+```
+
+- Include every matching SQL instead of limiting the report to top results.
+```bash
+sql_doctor -e 1000 --all /path/to/log/file.log
 ```
 
 ### 4. Uninstall
