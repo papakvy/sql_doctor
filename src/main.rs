@@ -9,7 +9,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-const VERSION: &str = "1.0.10 (2026-06-10)";
+const VERSION: &str = "1.0.11 (2026-06-10)";
 const DEFAULT_EXECUTION_TIME: f64 = 1000.0;
 const DEFAULT_TOP_RESULTS: usize = 15;
 
@@ -423,21 +423,24 @@ fn spawn_version_check() -> mpsc::Receiver<String> {
     let (tx, rx) = mpsc::channel();
     thread::spawn(move || {
         let output = Command::new("curl")
-            .arg("-s")
+            .arg("-sI")
             .arg("--connect-timeout")
             .arg("1")
             .arg("--max-time")
             .arg("2")
-            .arg("https://raw.githubusercontent.com/papakvy/sql_doctor/main/Cargo.toml")
+            .arg("https://github.com/papakvy/sql_doctor/releases/latest")
             .output();
         if let Ok(out) = output {
             if out.status.success() {
-                if let Ok(content) = String::from_utf8(out.stdout) {
-                    for line in content.lines() {
-                        if line.trim().starts_with("version =") {
-                            if let Some(ver) = line.split('"').nth(1) {
-                                let _ = tx.send(ver.trim().to_string());
-                                return;
+                if let Ok(headers) = String::from_utf8(out.stdout) {
+                    for line in headers.lines() {
+                        if line.to_ascii_lowercase().starts_with("location:") {
+                            if let Some(tag) = line.rsplit('/').next() {
+                                let tag = tag.trim().trim_start_matches('v').to_string();
+                                if !tag.is_empty() {
+                                    let _ = tx.send(tag);
+                                    return;
+                                }
                             }
                         }
                     }
@@ -449,14 +452,12 @@ fn spawn_version_check() -> mpsc::Receiver<String> {
 }
 
 fn print_update_available(rx: mpsc::Receiver<String>) {
-    if let Ok(remote_version) = rx.recv_timeout(Duration::from_millis(200)) {
+    if let Ok(remote_version) = rx.recv_timeout(Duration::from_millis(800)) {
         let current_ver = VERSION.split_whitespace().next().unwrap_or("0.0.0");
         if is_newer_version(current_ver, &remote_version) {
-            println!(
-                "\n\x1b[1;33m★ A new version of sql_doctor is available: v{} (Current: v{})\x1b[0m",
-                remote_version, current_ver
-            );
-            println!("\x1b[1;33m★ Run the install script to update: curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash\x1b[0m");
+            println!("\n\x1b[1;33m✨ New version available: \x1b[1;32mv{}\x1b[0m \x1b[90m(current: v{})\x1b[0m", remote_version, current_ver);
+            println!("\x1b[1;33m🚀 Run this command to update:\x1b[0m");
+            println!("   \x1b[1;36mcurl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash\x1b[0m\n");
         }
     }
 }
