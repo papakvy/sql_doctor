@@ -9,7 +9,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-const VERSION: &str = "2.0.2 (2026-06-10)";
+const VERSION: &str = "2.0.3 (2026-06-10)";
 const DEFAULT_EXECUTION_TIME: f64 = 1000.0;
 const DEFAULT_TOP_RESULTS: usize = 15;
 
