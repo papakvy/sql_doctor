@@ -1,3 +1,5 @@
-/output*
-/sql_doctor.sh*
+/.DS_Store
+/output/
+/sql_doctor.sh.x
+/sql_doctor.sh.x.c
 /*.log

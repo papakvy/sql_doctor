@@ -1,8 +1,15 @@
 # SQL Doctor
 
-## Pre-requirements
+## Requirements
 
-- `shc` package must be installed on your system
+- Bash
+- `make`
+
+## Local Testing
+
+```bash
+make test
+```
 
 ## Installation Instructions
 
@@ -12,7 +19,17 @@
 [sudo] make install
 ```
 
-Then, follow the messages during installation!
+To install into a custom prefix:
+
+```bash
+make install PREFIX="$HOME/.local"
+```
+
+Make sure the target `bin` directory is on your `PATH`:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
 
 ### 2. Verify
 
@@ -25,8 +42,17 @@ sql_doctor -v
 ### 3. Usage
 
   - Default value: `--execution-time = 1000`, `--total-results-peak = 200` and `--multiple-pattern = n`
+
+Use the installed command:
+
 ```bash
 sql_doctor /path/to/log/file.log
+```
+
+Or run the script directly from the repository:
+
+```bash
+./sql_doctor /path/to/log/file.log
 ```
 
 - Choose your desired values for `--execution-time` and `--total-results-peak`.
@@ -42,6 +68,12 @@ sql_doctor -e 5000 -p 100 /path/to/log/file.log
 
 ```bash
 [sudo] make uninstall
+```
+
+If you installed with a custom prefix, uninstall with the same prefix:
+
+```bash
+make uninstall PREFIX="$HOME/.local"
 ```
 
 ### 5. Contributing

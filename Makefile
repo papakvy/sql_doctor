@@ -1,41 +1,47 @@
 # Makefile
 
-INSTALL_DIR = /usr/local/bin
+PREFIX ?= /usr/local
+BINDIR ?= $(PREFIX)/bin
+DESTDIR ?=
 COMMAND_NAME = sql_doctor
-SCRIPT_NAME = sql_doctor.sh
-COMPILED_SCRIPT_NAME = $(SCRIPT_NAME).x
-SHC_COMMAND = shc
+SCRIPT_NAME = sql_doctor
+INSTALL_PATH = $(DESTDIR)$(BINDIR)/$(COMMAND_NAME)
 
-install: compile
-		@cp $(COMPILED_SCRIPT_NAME) $(INSTALL_DIR)/$(COMMAND_NAME)
-		@chmod +x $(INSTALL_DIR)/$(COMMAND_NAME)
+install:
+		@install -d "$(DESTDIR)$(BINDIR)"
+		@install -m 0755 "$(SCRIPT_NAME)" "$(INSTALL_PATH)"
 		@echo "'sql_doctor' was installed successfully."
-		@echo "Run 'sql_doctor -h' for more information."
+		@echo "Run '$(INSTALL_PATH) -h' for more information."
 
 uninstall:
-		@rm -f $(INSTALL_DIR)/$(COMMAND_NAME)
-		@rm -f $(INSTALL_DIR)/$(COMPILED_SCRIPT_NAME)
+		@rm -f "$(INSTALL_PATH)"
 		@echo "'sql_doctor' has been removed successfully."
 
-compile: check_shc
-		@$(SHC_COMMAND) -f $(SCRIPT_NAME)
-
-check_shc:
-		@command -v $(SHC_COMMAND) > /dev/null 2>&1 || { \
-				echo "Error: 'shc' is not installed. Please install it first.\n"; \
-				exit 1; \
-		}
-
-build: compile
+build:
+		@bash -n "$(SCRIPT_NAME)"
 		@echo "Build succeeded."
+
+test:
+		@bash tests/run.sh
 
 verify:
 		@echo "Verifying sql_doctor..."
-		@if sql_doctor -v; then \
+		@if "./$(SCRIPT_NAME)" -v; then \
 			echo "OK"; \
 		else \
 			echo "NG"; \
+			exit 1; \
 		fi
 		@echo "Verification completed."
 
-.PHONY: install uninstall compile check_shc
+verify-install:
+		@echo "Verifying installed sql_doctor..."
+		@if "$(INSTALL_PATH)" -v; then \
+			echo "OK"; \
+		else \
+			echo "NG"; \
+			exit 1; \
+		fi
+		@echo "Verification completed."
+
+.PHONY: install uninstall build test verify verify-install
