@@ -25,7 +25,7 @@ curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh 
 Specific release:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --version v1.0.5
+curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --version v1.0.6
 ```
 
 Temporary build from the current `main` branch:
@@ -63,7 +63,7 @@ export PATH="$HOME/.local/bin:$PATH"
 ```bash
 sql_doctor -v
 
-# sql_doctor 1.0.5 (2026-06-10)
+# sql_doctor 1.0.6 (2026-06-10)
 ```
 
 ### 3. Usage
