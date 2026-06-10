@@ -31,7 +31,7 @@ curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh 
 Install a specific release:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --version v1.0.3
+curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --version v1.0.4
 ```
 
 Before the first Rust release is published, test the `port-rust` branch by building from git:
@@ -63,7 +63,7 @@ export PATH="$HOME/.local/bin:$PATH"
 ```bash
 sql_doctor -v
 
-# sql_doctor 1.0.3 (2024-12-24 🎄)
+# sql_doctor 1.0.4 (2026-06-10)
 ```
 
 ### 3. Usage

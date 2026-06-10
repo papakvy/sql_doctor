@@ -5,7 +5,7 @@ use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
 
-const VERSION: &str = "1.0.3 (2024-12-24 🎄)";
+const VERSION: &str = "1.0.4 (2026-06-10)";
 const DEFAULT_EXECUTION_TIME: f64 = 1000.0;
 const DEFAULT_TOTAL_RESULTS_PEAK: usize = 200;
 const DEFAULT_TOP_RESULTS: usize = 15;
