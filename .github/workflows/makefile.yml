@@ -2,7 +2,7 @@ name: Makefile CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "port-rust" ]
   pull_request:
     branches: [ "main" ]
 
@@ -12,7 +12,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+
+    - uses: dtolnay/rust-toolchain@stable
 
     - name: Test
       run: make test

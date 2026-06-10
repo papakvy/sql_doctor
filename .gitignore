@@ -1,5 +1,6 @@
 /.DS_Store
 /output/
+/target/
 /sql_doctor.sh.x
 /sql_doctor.sh.x.c
 /*.log

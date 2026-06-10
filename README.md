@@ -2,8 +2,8 @@
 
 ## Requirements
 
-- Bash
 - `curl` or `wget` for quick install
+- Rust toolchain with `cargo` for source builds
 - `make` for local development
 
 ## Local Testing
@@ -16,7 +16,7 @@ make test
 
 ### 1. Install
 
-Quick install to `$HOME/.local/bin`:
+Quick install from the latest GitHub Release to `$HOME/.local/bin`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash
@@ -28,13 +28,19 @@ Install to `/usr/local/bin`. The installer uses `sudo` only when the target dire
 curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --system
 ```
 
-Install to a custom prefix:
+Install a specific release:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --prefix "$HOME/.local"
+curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --version v1.0.3
 ```
 
-If you already cloned the repository, install with `make`:
+Before the first Rust release is published, test the `port-rust` branch by building from git:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/port-rust/install.sh | bash -s -- --from-git port-rust
+```
+
+Build and install from source:
 
 ```bash
 [sudo] make install
@@ -70,10 +76,10 @@ Use the installed command:
 sql_doctor /path/to/log/file.log
 ```
 
-Or run the script directly from the repository:
+Or run the development binary from the repository:
 
 ```bash
-./sql_doctor /path/to/log/file.log
+cargo run -- /path/to/log/file.log
 ```
 
 - Choose your desired values for `--execution-time` and `--total-results-peak`.

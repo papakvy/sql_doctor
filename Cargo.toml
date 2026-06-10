@@ -1,0 +1,11 @@
+[package]
+name = "sql_doctor"
+version = "1.0.3"
+edition = "2021"
+
+[[bin]]
+name = "sql_doctor"
+path = "src/main.rs"
+
+[dependencies]
+flate2 = "1"

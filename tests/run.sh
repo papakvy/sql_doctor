@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SQL_DOCTOR_BIN="${SQL_DOCTOR_BIN:-$ROOT_DIR/target/debug/sql_doctor}"
 TEST_DIR="$(mktemp -d)"
 trap 'rm -rf "$TEST_DIR"' EXIT
 
@@ -48,7 +49,7 @@ done
 
 (
     cd "$TEST_DIR"
-    "$ROOT_DIR/sql_doctor" -e 1000 -p 10 sql.log > stdout.txt
+    "$SQL_DOCTOR_BIN" -e 1000 -p 10 sql.log > stdout.txt
 )
 
 OUTPUT_FILE="$TEST_DIR/output/output_1000.txt"
@@ -63,7 +64,7 @@ assert_contains "$TEST_DIR/stdout.txt" "Results written to"
 
 (
     cd "$TEST_DIR"
-    "$ROOT_DIR/sql_doctor" -e 1 -p 1 sql_many.log > default-top.out
+    "$SQL_DOCTOR_BIN" -e 1 -p 1 sql_many.log > default-top.out
 )
 DEFAULT_TOP_OUTPUT_FILE="$TEST_DIR/output/output_1.txt"
 if [[ "$(grep -cve '^$' "$DEFAULT_TOP_OUTPUT_FILE")" -ne 15 ]]; then
@@ -76,7 +77,7 @@ assert_contains "$DEFAULT_TOP_OUTPUT_FILE" "3020.0ms"
 
 (
     cd "$TEST_DIR"
-    "$ROOT_DIR/sql_doctor" -e 1 -p 100 --all sql_many.log > all.out
+    "$SQL_DOCTOR_BIN" -e 1 -p 100 --all sql_many.log > all.out
 )
 ALL_OUTPUT_FILE="$TEST_DIR/output/output_1.txt"
 if [[ "$(grep -cve '^$' "$ALL_OUTPUT_FILE")" -ne 20 ]]; then
@@ -87,7 +88,7 @@ fi
 
 (
     cd "$TEST_DIR"
-    "$ROOT_DIR/sql_doctor" -e 0.1 -p 1 --top 2 sql.log > top.out
+    "$SQL_DOCTOR_BIN" -e 0.1 -p 1 --top 2 sql.log > top.out
 )
 TOP_OUTPUT_FILE="$TEST_DIR/output/output_0.1.txt"
 assert_contains "$TOP_OUTPUT_FILE" "1500.5ms"
@@ -103,7 +104,7 @@ fi
 
 (
     cd "$TEST_DIR"
-    if "$ROOT_DIR/sql_doctor" missing.log > missing.out 2> missing.err; then
+    if "$SQL_DOCTOR_BIN" missing.log > missing.out 2> missing.err; then
         echo "Expected missing file check to fail" >&2
         exit 1
     fi
@@ -112,7 +113,7 @@ assert_contains "$TEST_DIR/missing.err" "not found"
 
 (
     cd "$TEST_DIR"
-    if "$ROOT_DIR/sql_doctor" --bad-option > bad-option.out 2> bad-option.err; then
+    if "$SQL_DOCTOR_BIN" --bad-option > bad-option.out 2> bad-option.err; then
         echo "Expected invalid option check to fail" >&2
         exit 1
     fi
@@ -121,7 +122,7 @@ assert_contains "$TEST_DIR/bad-option.err" "Invalid option"
 
 (
     cd "$TEST_DIR"
-    if "$ROOT_DIR/sql_doctor" -e > missing-value.out 2> missing-value.err; then
+    if "$SQL_DOCTOR_BIN" -e > missing-value.out 2> missing-value.err; then
         echo "Expected missing option value check to fail" >&2
         exit 1
     fi
@@ -130,7 +131,7 @@ assert_contains "$TEST_DIR/missing-value.err" "requires a value"
 
 (
     cd "$TEST_DIR"
-    if "$ROOT_DIR/sql_doctor" --top 1.5 sql.log > bad-top.out 2> bad-top.err; then
+    if "$SQL_DOCTOR_BIN" --top 1.5 sql.log > bad-top.out 2> bad-top.err; then
         echo "Expected non-integer --top check to fail" >&2
         exit 1
     fi
@@ -141,16 +142,30 @@ if command -v gzip > /dev/null 2>&1; then
     gzip -c "$TEST_DIR/sql.log" > "$TEST_DIR/sql.log.1.gz"
     (
         cd "$TEST_DIR"
-        "$ROOT_DIR/sql_doctor" -e 2000 -p 10 sql.log.1.gz > gzip.out
+        "$SQL_DOCTOR_BIN" -e 2000 -p 10 sql.log.1.gz > gzip.out
     )
     assert_contains "$TEST_DIR/output/output_2000.txt" "2500.0ms"
     assert_not_contains "$TEST_DIR/output/output_2000.txt" "1500.5ms"
 fi
 
+(
+    cd "$ROOT_DIR"
+    cargo build --release >/dev/null
+)
 bash -n "$ROOT_DIR/install.sh"
-
 INSTALL_DIR="$TEST_DIR/install-prefix"
-SQL_DOCTOR_URL="file://$ROOT_DIR/sql_doctor" "$ROOT_DIR/install.sh" --prefix "$INSTALL_DIR" > "$TEST_DIR/install.out"
+ARTIFACT_DIR="$TEST_DIR/artifact"
+mkdir -p "$ARTIFACT_DIR"
+cp "$ROOT_DIR/target/release/sql_doctor" "$ARTIFACT_DIR/sql_doctor"
+TEST_TARGET="test-target"
+TEST_ARCHIVE="sql_doctor-$TEST_TARGET.tar.gz"
+tar -C "$ARTIFACT_DIR" -czf "$TEST_DIR/$TEST_ARCHIVE" sql_doctor
+if command -v sha256sum >/dev/null 2>&1; then
+    (cd "$TEST_DIR" && sha256sum "$TEST_ARCHIVE" > checksums.txt)
+else
+    (cd "$TEST_DIR" && shasum -a 256 "$TEST_ARCHIVE" > checksums.txt)
+fi
+SQL_DOCTOR_TARGET="$TEST_TARGET" SQL_DOCTOR_ARTIFACT_URL="file://$TEST_DIR/$TEST_ARCHIVE" "$ROOT_DIR/install.sh" --prefix "$INSTALL_DIR" > "$TEST_DIR/install.out"
 "$INSTALL_DIR/bin/sql_doctor" -v > "$TEST_DIR/installed-version.out"
 assert_contains "$TEST_DIR/install.out" "sql_doctor installed"
 assert_contains "$TEST_DIR/installed-version.out" "1.0.3"
