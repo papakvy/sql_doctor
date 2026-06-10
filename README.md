@@ -16,25 +16,25 @@ make test
 
 ### 1. Install
 
-Temporary install by building the current `main` branch:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --from-git main
-```
-
-Install from the latest GitHub Release to `$HOME/.local/bin`:
+Latest release to `$HOME/.local/bin`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash
 ```
 
-Install a specific release:
+Specific release:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --version v1.0.5
 ```
 
-Install to `/usr/local/bin`. The installer uses `sudo` only when the target directory is not writable:
+Temporary build from the current `main` branch:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --from-git main
+```
+
+System install to `/usr/local/bin`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash -s -- --system
@@ -46,7 +46,7 @@ Build and install from source:
 [sudo] make install
 ```
 
-To install into a custom prefix:
+Custom prefix:
 
 ```bash
 make install PREFIX="$HOME/.local"
@@ -68,7 +68,7 @@ sql_doctor -v
 
 ### 3. Usage
 
-  - Default value: `--execution-time = 1000`, `--top = 15` and `--multiple-pattern = n`
+- Default value: `--execution-time = 1000`, `--top = 15` and `--multiple-pattern = n`
 
 Use the installed command:
 
