@@ -147,8 +147,9 @@ verify_checksum() {
         return
     fi
 
-    checksum_url="${artifact_url%/*}/$archive_name.sha256"
-    if ! download "$checksum_url" "$TMP_DIR/$archive_name.sha256"; then
+    checksum_name="${archive_name%.tar.gz}.sha256"
+    checksum_url="${artifact_url%/*}/$checksum_name"
+    if ! download "$checksum_url" "$TMP_DIR/$checksum_name"; then
         checksum_url="${artifact_url%/*}/checksums.txt"
         if ! download "$checksum_url" "$TMP_DIR/checksums.txt"; then
             echo "Warning: checksum file unavailable; skipping checksum verification." >&2
@@ -156,7 +157,7 @@ verify_checksum() {
         fi
         expected="$(awk -v name="$archive_name" '$2 == name {print $1}' "$TMP_DIR/checksums.txt")"
     else
-        expected="$(awk '{print $1}' "$TMP_DIR/$archive_name.sha256")"
+        expected="$(awk '{print $1}' "$TMP_DIR/$checksum_name")"
     fi
 
     if [[ -z "$expected" ]]; then
