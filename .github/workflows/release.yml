@@ -42,7 +42,7 @@ jobs:
           tar -C dist -czf "sql_doctor-${{ matrix.target }}.tar.gz" sql_doctor
           shasum -a 256 "sql_doctor-${{ matrix.target }}.tar.gz" > "sql_doctor-${{ matrix.target }}.sha256"
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sql_doctor-${{ matrix.target }}
           path: |
@@ -58,7 +58,7 @@ jobs:
           fetch-depth: 0
       - name: Fetch tags
         run: git fetch --tags --force
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: artifacts
           merge-multiple: true
@@ -71,7 +71,7 @@ jobs:
             echo
             git log --no-merges --pretty=format:'- %s (%h)' v1.0.3..HEAD
           } > release-notes.md
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           body_path: release-notes.md
           files: |
