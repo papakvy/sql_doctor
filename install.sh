@@ -140,25 +140,25 @@ sha256_file() {
 }
 
 verify_checksum() {
-    local archive_path=$1 archive_name=$2 artifact_url=$3 checksums_url expected actual
+    local archive_path=$1 archive_name=$2 artifact_url=$3 checksum_url expected actual
 
     if ! command -v sha256sum >/dev/null 2>&1 && ! command -v shasum >/dev/null 2>&1; then
         echo "Warning: sha256sum or shasum not found; skipping checksum verification." >&2
         return
     fi
 
-    if [[ "$artifact_url" = file://* ]]; then
-        checksums_url="${artifact_url%/*}/checksums.txt"
+    checksum_url="${artifact_url%/*}/$archive_name.sha256"
+    if ! download "$checksum_url" "$TMP_DIR/$archive_name.sha256"; then
+        checksum_url="${artifact_url%/*}/checksums.txt"
+        if ! download "$checksum_url" "$TMP_DIR/checksums.txt"; then
+            echo "Warning: checksum file unavailable; skipping checksum verification." >&2
+            return
+        fi
+        expected="$(awk -v name="$archive_name" '$2 == name {print $1}' "$TMP_DIR/checksums.txt")"
     else
-        checksums_url="${artifact_url%/*}/checksums.txt"
+        expected="$(awk '{print $1}' "$TMP_DIR/$archive_name.sha256")"
     fi
 
-    if ! download "$checksums_url" "$TMP_DIR/checksums.txt"; then
-        echo "Warning: checksums.txt unavailable; skipping checksum verification." >&2
-        return
-    fi
-
-    expected="$(awk -v name="$archive_name" '$2 == name {print $1}' "$TMP_DIR/checksums.txt")"
     if [[ -z "$expected" ]]; then
         echo "Warning: checksum for $archive_name not found; skipping checksum verification." >&2
         return
