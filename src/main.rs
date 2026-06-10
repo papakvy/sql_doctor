@@ -4,9 +4,12 @@ use std::env;
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
-use std::time::Instant;
+use std::process::Command;
+use std::sync::mpsc;
+use std::thread;
+use std::time::{Duration, Instant};
 
-const VERSION: &str = "1.0.6 (2026-06-10)";
+const VERSION: &str = "1.0.9 (2026-06-10)";
 const DEFAULT_EXECUTION_TIME: f64 = 1000.0;
 const DEFAULT_TOP_RESULTS: usize = 15;
 
@@ -36,6 +39,7 @@ fn main() {
 
 fn run() -> Result<(), String> {
     let started_at = Instant::now();
+    let version_check = spawn_version_check();
     let config = parse_args(env::args().collect())?;
 
     fs::create_dir_all("output")
@@ -59,6 +63,7 @@ fn run() -> Result<(), String> {
 
     if total_matches == 0 {
         println!("\x1b[1;31m• No results found.\x1b[0m");
+        print_update_available(version_check);
         println!(
             "\n\x1b[1;34mFinished in {:.2} seconds.\x1b[0m",
             started_at.elapsed().as_secs_f64()
@@ -84,6 +89,7 @@ fn run() -> Result<(), String> {
             .display()
     );
     display_last_3_results(&final_records);
+    print_update_available(version_check);
     println!(
         "\n\x1b[1;34mFinished in {:.2} seconds.\x1b[0m",
         started_at.elapsed().as_secs_f64()
@@ -413,6 +419,59 @@ fn display_last_3_results(records: &[MatchRecord]) {
     }
 }
 
+fn spawn_version_check() -> mpsc::Receiver<String> {
+    let (tx, rx) = mpsc::channel();
+    thread::spawn(move || {
+        let output = Command::new("curl")
+            .arg("-s")
+            .arg("--connect-timeout")
+            .arg("1")
+            .arg("--max-time")
+            .arg("2")
+            .arg("https://raw.githubusercontent.com/papakvy/sql_doctor/main/Cargo.toml")
+            .output();
+        if let Ok(out) = output {
+            if out.status.success() {
+                if let Ok(content) = String::from_utf8(out.stdout) {
+                    for line in content.lines() {
+                        if line.trim().starts_with("version =") {
+                            if let Some(ver) = line.split('"').nth(1) {
+                                let _ = tx.send(ver.trim().to_string());
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+    rx
+}
+
+fn print_update_available(rx: mpsc::Receiver<String>) {
+    if let Ok(remote_version) = rx.recv_timeout(Duration::from_millis(200)) {
+        let current_ver = VERSION.split_whitespace().next().unwrap_or("0.0.0");
+        if is_newer_version(current_ver, &remote_version) {
+            println!(
+                "\n\x1b[1;33m★ A new version of sql_doctor is available: v{} (Current: v{})\x1b[0m",
+                remote_version, current_ver
+            );
+            println!("\x1b[1;33m★ Run the install script to update: curl -fsSL https://raw.githubusercontent.com/papakvy/sql_doctor/main/install.sh | bash\x1b[0m");
+        }
+    }
+}
+
+fn is_newer_version(current: &str, remote: &str) -> bool {
+    let parse = |v: &str| -> Vec<u32> {
+        v.split('.')
+            .map(|s| s.parse::<u32>().unwrap_or(0))
+            .collect()
+    };
+    let current_parts = parse(current);
+    let remote_parts = parse(remote);
+    remote_parts > current_parts
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -448,5 +507,14 @@ mod tests {
         records.sort_by(compare_records);
         let durations: Vec<f64> = records.iter().map(|record| record.duration_ms).collect();
         assert_eq!(durations, vec![300.0, 400.0, 500.0]);
+    }
+
+    #[test]
+    fn compares_versions_correctly() {
+        assert!(is_newer_version("1.0.6", "1.0.9"));
+        assert!(is_newer_version("1.0.6", "1.1.0"));
+        assert!(is_newer_version("1.0.6", "2.0.0"));
+        assert!(!is_newer_version("1.0.9", "1.0.6"));
+        assert!(!is_newer_version("1.0.6", "1.0.6"));
     }
 }

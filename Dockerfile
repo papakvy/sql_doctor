@@ -7,7 +7,7 @@ COPY src ./src
 RUN cargo build --release
 
 FROM alpine:3.20
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates curl
 WORKDIR /app
 COPY --from=builder /app/target/release/sql_doctor /usr/local/bin/sql_doctor
 ENTRYPOINT ["sql_doctor"]
