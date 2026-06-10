@@ -168,6 +168,6 @@ fi
 SQL_DOCTOR_TARGET="$TEST_TARGET" SQL_DOCTOR_ARTIFACT_URL="file://$TEST_DIR/$TEST_ARCHIVE" "$ROOT_DIR/install.sh" --prefix "$INSTALL_DIR" > "$TEST_DIR/install.out"
 "$INSTALL_DIR/bin/sql_doctor" -v > "$TEST_DIR/installed-version.out"
 assert_contains "$TEST_DIR/install.out" "sql_doctor installed"
-assert_contains "$TEST_DIR/installed-version.out" "1.0.6"
+assert_contains "$TEST_DIR/installed-version.out" "$(grep -m1 '^version = ' "$ROOT_DIR/Cargo.toml" | sed 's/version = "//; s/"//')"
 
 echo "All tests passed."
