@@ -181,7 +181,6 @@ install_file() {
 
     if [[ "$BINDIR" = /usr/local/* ]]; then
         if can_sudo; then
-            sudo install -d "$BINDIR"
             sudo install -m 0755 "$source" "$TARGET"
             return
         fi
