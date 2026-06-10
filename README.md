@@ -124,3 +124,27 @@ make uninstall PREFIX="$HOME/.local"
   - Commit your changes (`git commit -am 'Add some feature'`)
   - Push to the branch (`git push origin my-new-feature`)
   - Create a new Pull Request
+
+## Docker
+
+You can build and run SQL Doctor as a container.
+
+### Build locally
+
+```bash
+docker build -t sql_doctor .
+```
+
+### Run
+
+```bash
+docker run --rm -v "$PWD:/data" sql_doctor -e 1000 /data/path/to/logfile.log
+```
+
+### Publish on GitHub Container Registry
+
+The repository now includes a GitHub Actions workflow that publishes a Docker image to GHCR when you push a tag like `v1.0.7`.
+
+```bash
+docker pull ghcr.io/<owner>/sql_doctor:v1.0.7
+```
