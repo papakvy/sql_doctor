@@ -4,6 +4,7 @@ use std::env;
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
+use std::time::Instant;
 
 const VERSION: &str = "1.0.5 (2026-06-10)";
 const DEFAULT_EXECUTION_TIME: f64 = 1000.0;
@@ -34,6 +35,7 @@ fn main() {
 }
 
 fn run() -> Result<(), String> {
+    let started_at = Instant::now();
     let config = parse_args(env::args().collect())?;
 
     fs::create_dir_all("output")
@@ -57,7 +59,10 @@ fn run() -> Result<(), String> {
 
     if total_matches == 0 {
         println!("\x1b[1;31m• No results found.\x1b[0m");
-        println!("\n\x1b[1;34mFinished in 0 seconds.\x1b[0m");
+        println!(
+            "\n\x1b[1;34mFinished in {:.2} seconds.\x1b[0m",
+            started_at.elapsed().as_secs_f64()
+        );
         return Ok(());
     }
 
@@ -79,7 +84,10 @@ fn run() -> Result<(), String> {
             .display()
     );
     display_last_3_results(&final_records);
-    println!("\n\x1b[1;34mFinished in 0 seconds.\x1b[0m");
+    println!(
+        "\n\x1b[1;34mFinished in {:.2} seconds.\x1b[0m",
+        started_at.elapsed().as_secs_f64()
+    );
 
     Ok(())
 }
